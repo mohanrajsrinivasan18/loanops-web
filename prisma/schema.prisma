@@ -1,0 +1,360 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// BUSINESS / TENANT
+// ============================================================
+
+model Tenant {
+  id               String   @id @default(cuid())
+  name             String
+  code             String   @unique
+  businessType     String   @default("lending")
+  businessCategory String?
+  ownerName        String?
+  ownerPhone       String?
+  ownerEmail       String?
+  gstNumber        String?
+  address          String?
+  logo             String?
+  status           String   @default("active")
+  plan             String   @default("starter")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  Agent            Agent[]
+  Collection       Collection[]
+  Customer         Customer[]
+  Line             Line[]
+  LineDailyFinance LineDailyFinance[]
+  Loan             Loan[]
+  Expense          Expense[]
+  TenantSettings   TenantSettings?
+  User             User[]
+  AuditLog         AuditLog[]
+  Transaction      Transaction[]
+
+  @@index([businessType])
+  @@index([status])
+}
+
+model TenantSettings {
+  id              String   @id @default(cuid())
+  tenantId        String   @unique
+  brandName       String?
+  brandLogo       String?
+  primaryColor    String   @default("#3b82f6")
+  secondaryColor  String   @default("#8b5cf6")
+  currency        String   @default("INR")
+  timezone        String   @default("Asia/Kolkata")
+  dateFormat      String   @default("DD/MM/YYYY")
+  defaultInterestRate Float @default(12)
+  defaultTenure   Int      @default(12)
+  minLoanAmount   Float    @default(5000)
+  maxLoanAmount   Float    @default(500000)
+  reminderDaysBefore Int   @default(3)
+  overdueGraceDays Int     @default(3)
+  smsEnabled      Boolean  @default(true)
+  emailEnabled    Boolean  @default(true)
+  whatsappEnabled Boolean  @default(false)
+  agentVisibility Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  Tenant          Tenant   @relation(fields: [tenantId], references: [id])
+}
+
+// ============================================================
+// USERS & AUTH
+// ============================================================
+
+model User {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  name        String
+  phone       String?
+  password    String
+  role        String
+  status      String    @default("active")
+  tenantId    String?
+  agentId     String?   @unique
+  customerId  String?   @unique
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  Tenant      Tenant?   @relation(fields: [tenantId], references: [id])
+  Agent       Agent?    @relation(fields: [agentId], references: [id])
+  Customer    Customer? @relation(fields: [customerId], references: [id])
+
+  @@index([email])
+  @@index([tenantId])
+  @@index([phone])
+}
+
+model Otp {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+  @@index([expiresAt])
+}
+
+// ============================================================
+// AGENTS
+// ============================================================
+
+model Agent {
+  id               String       @id @default(cuid())
+  name             String
+  phone            String
+  email            String?
+  area             String?
+  status           String       @default("active")
+  targetCollection Float        @default(0)
+  tenantId         String
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  Tenant           Tenant       @relation(fields: [tenantId], references: [id])
+  Collection       Collection[]
+  Customer         Customer[]
+  Line             Line[]
+  Loan             Loan[]
+  User             User?
+
+  @@index([status])
+  @@index([tenantId])
+  @@index([phone])
+}
+
+// ============================================================
+// CUSTOMERS
+// ============================================================
+
+model Customer {
+  id         String       @id @default(cuid())
+  name       String
+  phone      String
+  email      String?
+  address    String       @default("")
+  aadhaar    String?
+  pan        String?
+  area       String?
+  lat        Float?
+  lng        Float?
+  status     String       @default("active")
+  agentId    String?
+  lineId     String?
+  tenantId   String
+  metadata   Json?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  Agent      Agent?       @relation(fields: [agentId], references: [id])
+  Line       Line?        @relation(fields: [lineId], references: [id])
+  Tenant     Tenant       @relation(fields: [tenantId], references: [id])
+  Collection Collection[]
+  Loan       Loan[]
+  User       User?
+
+  @@index([agentId])
+  @@index([lineId])
+  @@index([phone])
+  @@index([tenantId])
+}
+
+// ============================================================
+// LOANS
+// ============================================================
+
+model Loan {
+  id           String       @id @default(cuid())
+  customerId   String
+  amount       Float
+  interestRate Float
+  tenure       Int
+  emi          Float
+  outstanding  Float
+  loanType     String       @default("monthly")
+  status       String       @default("active")
+  startDate    DateTime
+  endDate      DateTime?
+  agentId      String?
+  tenantId     String
+  metadata     Json?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  Collection   Collection[]
+  Agent        Agent?       @relation(fields: [agentId], references: [id])
+  Customer     Customer     @relation(fields: [customerId], references: [id])
+  Tenant       Tenant       @relation(fields: [tenantId], references: [id])
+
+  @@index([agentId])
+  @@index([customerId])
+  @@index([status])
+  @@index([tenantId])
+}
+
+// ============================================================
+// COLLECTIONS
+// ============================================================
+
+model Collection {
+  id              String    @id @default(cuid())
+  loanId          String
+  customerId      String
+  amount          Float
+  method          String
+  status          String    @default("pending")
+  dueDate         DateTime
+  collectedDate   DateTime?
+  collectedAmount Float?
+  agentId         String?
+  tenantId        String
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  Agent           Agent?    @relation(fields: [agentId], references: [id])
+  Customer        Customer  @relation(fields: [customerId], references: [id])
+  Loan            Loan      @relation(fields: [loanId], references: [id])
+  Tenant          Tenant    @relation(fields: [tenantId], references: [id])
+
+  @@index([agentId])
+  @@index([customerId])
+  @@index([dueDate])
+  @@index([loanId])
+  @@index([status])
+  @@index([tenantId])
+}
+
+// ============================================================
+// LINES & DAILY FINANCE
+// ============================================================
+
+model Line {
+  id               String             @id @default(cuid())
+  name             String
+  area             String
+  type             String             @default("daily")
+  weeklyDay        String?
+  interestRate     Float              @default(2.5)
+  agentId          String?
+  tenantId         String
+  status           String             @default("active")
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  Agent            Agent?             @relation(fields: [agentId], references: [id])
+  Tenant           Tenant             @relation(fields: [tenantId], references: [id])
+  Customer         Customer[]
+  LineDailyFinance LineDailyFinance[]
+
+  @@index([agentId])
+  @@index([tenantId])
+  @@index([area])
+  @@index([status])
+}
+
+model LineDailyFinance {
+  id               String   @id @default(cuid())
+  lineId           String
+  tenantId         String
+  date             DateTime
+  collectionAmount Float    @default(0)
+  investmentAmount Float    @default(0)
+  expenseAmount    Float    @default(0)
+  notes            String?
+  agentNotes       String?
+  adminNotes       String?
+  isLocked         Boolean  @default(false)
+  lockedAt         DateTime?
+  lockedByUserId   String?
+  updatedByUserId  String?
+  updatedByRole    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  Line             Line     @relation(fields: [lineId], references: [id])
+  Tenant           Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@unique([lineId, date])
+  @@index([tenantId])
+  @@index([date])
+}
+
+// ============================================================
+// EXPENSES & TRANSACTIONS
+// ============================================================
+
+model Expense {
+  id          String   @id @default(cuid())
+  category    String
+  amount      Float
+  description String?
+  date        DateTime
+  agentId     String?
+  tenantId    String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  Tenant      Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@index([category])
+  @@index([date])
+}
+
+model Transaction {
+  id              String   @id @default(cuid())
+  type            String
+  status          String   @default("completed")
+  totalAmount     Float
+  paidAmount      Float    @default(0)
+  balanceAmount   Float    @default(0)
+  paymentMethod   String?
+  customerId      String?
+  agentId         String?
+  referenceId     String?
+  referenceType   String?
+  notes           String?
+  tenantId        String
+  metadata        Json?
+  transactionDate DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  Tenant          Tenant   @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@index([type])
+  @@index([customerId])
+  @@index([transactionDate])
+}
+
+// ============================================================
+// AUDIT LOG
+// ============================================================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  changes   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  Tenant    Tenant?  @relation(fields: [tenantId], references: [id])
+
+  @@index([createdAt])
+  @@index([entity])
+  @@index([tenantId])
+  @@index([userId])
+}
