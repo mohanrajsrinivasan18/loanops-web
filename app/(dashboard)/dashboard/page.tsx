@@ -56,11 +56,11 @@ export default function DashboardPage() {
       if (dashboard.success || dashboard.data || dashboard.customers) {
         setDashboardData(dashboard.data || dashboard);
       }
-      
+
       if (activity.success !== false && activity.data) {
         setRecentActivity(activity.data);
       }
-      
+
       if (agents.success !== false && agents.data) {
         setTopAgentsData(agents.data);
       }
@@ -285,7 +285,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-3 mb-1">
-                <h1 className="text-2xl font-bold text-neutral-900 tracking-tight">Dashboard</h1>
+                <h1 className="text-3xl font-bold text-neutral-900 tracking-tight">Dashboard</h1>
                 {isSuperAdmin && selectedTenant && (
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-primary-50 border border-primary-100 rounded-xl">
                     <Building2 className="w-3.5 h-3.5 text-primary-600" />
@@ -305,11 +305,10 @@ export default function DashboardPage() {
                   <button
                     key={range}
                     onClick={() => setTimeRange(range)}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 ${
-                      timeRange === range
+                    className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all duration-200 ${timeRange === range
                         ? 'bg-white text-neutral-900 shadow-sm'
                         : 'text-neutral-500 hover:text-neutral-700'
-                    }`}
+                      }`}
                   >
                     {range}
                   </button>
@@ -337,27 +336,25 @@ export default function DashboardPage() {
               style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
             >
               <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-xl ${stat.bgColor} border ${stat.borderColor} group-hover:scale-110 transition-transform duration-300`}>
-                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                <div className={`p-4 rounded-xl ${stat.bgColor} border ${stat.borderColor} group-hover:scale-110 transition-transform duration-300`}>
+                  <stat.icon className={`w-6 h-6 ${stat.color}`} />
                 </div>
-                <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${
-                  stat.trend === 'up' ? 'bg-success-50' : 'bg-danger-50'
-                }`}>
+                <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${stat.trend === 'up' ? 'bg-success-50' : 'bg-danger-50'
+                  }`}>
                   {stat.trend === 'up' ? (
                     <ArrowUpRight className="w-3.5 h-3.5 text-success-600" />
                   ) : (
                     <ArrowDownRight className="w-3.5 h-3.5 text-danger-600" />
                   )}
-                  <span className={`text-xs font-bold ${
-                    stat.trend === 'up' ? 'text-success-700' : 'text-danger-700'
-                  }`}>
+                  <span className={`text-xs font-bold ${stat.trend === 'up' ? 'text-success-700' : 'text-danger-700'
+                    }`}>
                     {stat.change}
                   </span>
                 </div>
               </div>
               <div>
                 <p className="text-sm text-neutral-500 font-medium mb-1">{stat.label}</p>
-                <p className="text-2xl font-bold text-neutral-900 tracking-tight">{stat.value}</p>
+                <p className="text-3xl font-bold text-neutral-900 tracking-tight">{stat.value}</p>
               </div>
             </div>
           ))}
@@ -376,8 +373,8 @@ export default function DashboardPage() {
               onClick={() => router.push(action.href)}
               className="flex items-center gap-3 p-4 bg-white rounded-xl border border-neutral-200 hover:border-neutral-300 hover:shadow-sm transition-all text-left group active:scale-[0.98]"
             >
-              <div className={`w-10 h-10 ${action.color} rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
-                <action.icon className="w-5 h-5 text-white" />
+              <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
+                <action.icon className="w-6 h-6 text-white" />
               </div>
               <div>
                 <p className="text-sm font-semibold text-neutral-900">{action.label}</p>
@@ -391,7 +388,7 @@ export default function DashboardPage() {
         <div className="mb-8 card-modern p-6 animate-slide-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-lg font-bold text-neutral-900 tracking-tight">Collection Overview</h2>
+              <h2 className="text-xl font-bold text-neutral-900 tracking-tight">Collection Overview</h2>
               <p className="text-sm text-neutral-500 mt-0.5">Track your collection performance</p>
             </div>
             <div className="flex items-center gap-1 bg-neutral-100 rounded-xl p-1">
@@ -399,11 +396,10 @@ export default function DashboardPage() {
                 <button
                   key={view}
                   onClick={() => setCollectionView(view)}
-                  className={`px-4 py-1.5 text-sm rounded-lg font-semibold transition-all duration-200 capitalize ${
-                    collectionView === view
+                  className={`px-4 py-1.5 text-sm rounded-lg font-semibold transition-all duration-200 capitalize ${collectionView === view
                       ? 'bg-white text-neutral-900 shadow-sm'
                       : 'text-neutral-500 hover:text-neutral-700'
-                  }`}
+                    }`}
                 >
                   {view}
                 </button>
@@ -445,8 +441,8 @@ export default function DashboardPage() {
                 const barColor = collectionView === 'daily'
                   ? 'bg-gradient-to-t from-emerald-500 to-emerald-400'
                   : collectionView === 'weekly'
-                  ? 'bg-gradient-to-t from-primary-500 to-primary-400'
-                  : 'bg-gradient-to-t from-primary-600 to-primary-500';
+                    ? 'bg-gradient-to-t from-primary-500 to-primary-400'
+                    : 'bg-gradient-to-t from-primary-600 to-primary-500';
 
                 return (
                   <div
@@ -454,22 +450,19 @@ export default function DashboardPage() {
                     className="flex-1 flex flex-col items-center gap-1.5 cursor-pointer group"
                     onClick={() => setSelectedBar(isSelected ? null : index)}
                   >
-                    <span className={`text-[10px] font-bold transition-colors ${
-                      isSelected ? 'text-neutral-900' : 'text-neutral-400 group-hover:text-neutral-600'
-                    }`}>
+                    <span className={`text-[10px] font-bold transition-colors ${isSelected ? 'text-neutral-900' : 'text-neutral-400 group-hover:text-neutral-600'
+                      }`}>
                       {item.collected}%
                     </span>
                     <div className="w-full bg-neutral-200/50 rounded-lg overflow-hidden relative" style={{ height: '180px' }}>
                       <div
-                        className={`absolute bottom-0 w-full ${barColor} rounded-lg transition-all duration-500 ${
-                          isSelected ? 'opacity-100 shadow-lg' : 'opacity-75 group-hover:opacity-100'
-                        }`}
+                        className={`absolute bottom-0 w-full ${barColor} rounded-lg transition-all duration-500 ${isSelected ? 'opacity-100 shadow-lg' : 'opacity-75 group-hover:opacity-100'
+                          }`}
                         style={{ height: `${item.collected}%` }}
                       />
                     </div>
-                    <span className={`text-[10px] font-semibold ${
-                      isSelected ? 'text-neutral-900' : 'text-neutral-500'
-                    }`}>
+                    <span className={`text-[10px] font-semibold ${isSelected ? 'text-neutral-900' : 'text-neutral-500'
+                      }`}>
                       {item.label}
                     </span>
                   </div>
@@ -510,9 +503,8 @@ export default function DashboardPage() {
             {/* Legend */}
             <div className="flex items-center justify-center gap-6 pt-3 border-t border-neutral-100">
               <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded ${
-                  collectionView === 'daily' ? 'bg-emerald-500' : collectionView === 'weekly' ? 'bg-primary-500' : 'bg-primary-600'
-                }`} />
+                <div className={`w-3 h-3 rounded ${collectionView === 'daily' ? 'bg-emerald-500' : collectionView === 'weekly' ? 'bg-primary-500' : 'bg-primary-600'
+                  }`} />
                 <span className="text-xs text-neutral-500 font-medium">Collection Rate</span>
               </div>
               <span className="text-xs text-neutral-400">
@@ -528,7 +520,7 @@ export default function DashboardPage() {
           <div className={`card-modern p-6 animate-slide-up ${user?.role === 'agent' ? 'lg:col-span-3' : 'lg:col-span-2'}`} style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-lg font-bold text-neutral-900 tracking-tight">Recent Activity</h2>
+                <h2 className="text-xl font-bold text-neutral-900 tracking-tight">Recent Activity</h2>
                 <p className="text-sm text-neutral-500 mt-0.5">Latest transactions and events</p>
               </div>
               <button
@@ -594,7 +586,7 @@ export default function DashboardPage() {
             <div className="card-modern p-6 animate-slide-up" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
               <div className="flex items-center justify-between mb-5">
                 <div>
-                  <h2 className="text-lg font-bold text-neutral-900 tracking-tight">Top Agents</h2>
+                  <h2 className="text-xl font-bold text-neutral-900 tracking-tight">Top Agents</h2>
                   <p className="text-sm text-neutral-500 mt-0.5">Best performers this period</p>
                 </div>
                 <button

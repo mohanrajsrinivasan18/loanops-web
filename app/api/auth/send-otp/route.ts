@@ -28,23 +28,17 @@ export async function POST(request: NextRequest) {
       data: { phone: cleanPhone, code, expiresAt },
     });
 
-    // TODO: Send OTP via SMS (Twilio/MSG91)
-    // For now, return OTP in dev mode for testing
-    const isDev = process.env.NODE_ENV === 'development';
-
     // Check if phone is already registered (User or Agent)
     const existingUser = await prisma.user.findFirst({ where: { phone: cleanPhone } });
     const existingAgent = await prisma.agent.findFirst({ where: { phone: cleanPhone, status: 'active' } });
     const isRegistered = !!(existingUser || existingAgent);
-
-    console.log(`📱 OTP for ${cleanPhone}: ${code} | registered: ${isRegistered}`);
 
     return addCorsHeaders(
       NextResponse.json({
         success: true,
         message: 'OTP sent successfully',
         isRegistered,
-        ...(isDev ? { otp: code } : {}), // Only in dev
+        otp: code, // Return always for now since SMS is not integrated
       }),
       request
     );

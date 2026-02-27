@@ -35,9 +35,9 @@ export async function GET(request: NextRequest) {
       });
 
       if (!customer) {
-        return respond(NextResponse.json({ 
+        return respond(NextResponse.json({
           success: false,
-          error: 'Customer not found' 
+          error: 'Customer not found'
         }, { status: 404 }));
       }
 
@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
     }));
   } catch (error) {
     console.error('Error fetching customers:', error);
-    return respond(NextResponse.json({ 
+    return respond(NextResponse.json({
       success: false,
       error: 'Failed to fetch customers',
       details: error instanceof Error ? error.message : 'Unknown error'
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
     console.log('=== CREATE CUSTOMER API ===');
     console.log('Request body:', JSON.stringify(body, null, 2));
 
-    const { tenantId, name, phone, email, address, area, aadhaar, pan, lat, lng, agentId, lineId, status } = body;
+    const { tenantId, name, phone, email, address, area, aadhaar, pan, lat, lng, agentId, lineId, status, metadata } = body;
 
     // Validate required fields
     if (!name) {
@@ -153,9 +153,9 @@ export async function POST(request: NextRequest) {
     if (!finalTenantId) {
       const firstTenant = await prisma.tenant.findFirst();
       if (!firstTenant) {
-        return respond(NextResponse.json({ 
+        return respond(NextResponse.json({
           success: false,
-          error: 'No tenant found. Please create a tenant first.' 
+          error: 'No tenant found. Please create a tenant first.'
         }, { status: 400 }));
       }
       finalTenantId = firstTenant.id;
@@ -225,6 +225,7 @@ export async function POST(request: NextRequest) {
       agentId: validAgentId,
       lineId: validLineId,
       status: status || 'active',
+      metadata: metadata || null,
       updatedAt: new Date(),
     };
 
@@ -289,6 +290,7 @@ export async function PUT(request: NextRequest) {
     if (updates.agentId !== undefined) cleanUpdates.agentId = updates.agentId || null;
     if (updates.lineId !== undefined) cleanUpdates.lineId = updates.lineId || null;
     if (updates.status !== undefined) cleanUpdates.status = updates.status;
+    if (updates.metadata !== undefined) cleanUpdates.metadata = updates.metadata || null;
 
     console.log('Updating customer with data:', JSON.stringify(cleanUpdates, null, 2));
 

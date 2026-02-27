@@ -107,6 +107,7 @@ body {
 }
 
 @layer components {
+
   /* ========== CARDS ========== */
   .card-modern {
     @apply bg-white rounded-2xl border border-neutral-100 shadow-card transition-all duration-200;
@@ -285,6 +286,46 @@ body {
 }
 
 @layer utilities {
+  .text-h1 {
+    @apply text-3xl font-bold tracking-tight text-neutral-900;
+  }
+
+  .text-h2 {
+    @apply text-2xl font-bold tracking-tight text-neutral-900;
+  }
+
+  .text-h3 {
+    @apply text-xl font-semibold tracking-tight text-neutral-900;
+  }
+
+  .text-h4 {
+    @apply text-lg font-semibold text-neutral-800;
+  }
+
+  .text-body-lg {
+    @apply text-lg text-neutral-600;
+  }
+
+  .text-body {
+    @apply text-base text-neutral-600;
+  }
+
+  .text-body-sm {
+    @apply text-sm text-neutral-500;
+  }
+
+  .text-caption {
+    @apply text-xs text-neutral-400 font-medium;
+  }
+
+  .text-label {
+    @apply text-xs font-bold uppercase tracking-wider text-neutral-500;
+  }
+
+  .text-button {
+    @apply text-sm font-semibold;
+  }
+
   .text-balance {
     text-wrap: balance;
   }
@@ -299,18 +340,40 @@ body {
   }
 
   /* Stagger animation delays */
-  .stagger-1 { animation-delay: 50ms; }
-  .stagger-2 { animation-delay: 100ms; }
-  .stagger-3 { animation-delay: 150ms; }
-  .stagger-4 { animation-delay: 200ms; }
-  .stagger-5 { animation-delay: 250ms; }
-  .stagger-6 { animation-delay: 300ms; }
+  .stagger-1 {
+    animation-delay: 50ms;
+  }
+
+  .stagger-2 {
+    animation-delay: 100ms;
+  }
+
+  .stagger-3 {
+    animation-delay: 150ms;
+  }
+
+  .stagger-4 {
+    animation-delay: 200ms;
+  }
+
+  .stagger-5 {
+    animation-delay: 250ms;
+  }
+
+  .stagger-6 {
+    animation-delay: 300ms;
+  }
 }
 
 /* Animations */
 @keyframes shimmer {
-  0% { background-position: -1000px 0; }
-  100% { background-position: 1000px 0; }
+  0% {
+    background-position: -1000px 0;
+  }
+
+  100% {
+    background-position: 1000px 0;
+  }
 }
 
 /* Mobile Optimizations */
@@ -349,16 +412,66 @@ body {
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* Fade in animation */
 @keyframes fade-in {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
 
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce-soft {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes pulse-soft {
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
 .animate-fade-in {
-  animation: fade-in 0.2s ease-out;
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+.animate-bounce-soft {
+  animation: bounce-soft 2s infinite ease-in-out;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 3s infinite ease-in-out;
 }

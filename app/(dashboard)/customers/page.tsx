@@ -25,6 +25,7 @@ interface Customer {
   agentId: string | null;
   lineId?: string | null;
   tenantId: string;
+  metadata?: any;
   createdAt: string;
   agent?: any;
   Agent?: any;
@@ -559,6 +560,19 @@ export default function CustomersPage() {
                         { label: 'Address', value: detailCustomer.address || '-' },
                         { label: 'Aadhaar', value: detailCustomer.aadhaar || '-' },
                         { label: 'PAN', value: detailCustomer.pan || '-' },
+                        {
+                          label: 'Location',
+                          value: detailCustomer.lat && detailCustomer.lng ? (
+                            <a
+                              href={`https://www.google.com/maps/search/?api=1&query=${detailCustomer.lat},${detailCustomer.lng}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary-600 hover:underline flex items-center gap-1"
+                            >
+                              <MapPin className="w-3 h-3" /> {`${detailCustomer.lat.toFixed(6)}, ${detailCustomer.lng.toFixed(6)}`}
+                            </a>
+                          ) : 'Not captured'
+                        },
                       ].map(row => (
                         <div key={row.label} className="flex items-center justify-between py-2 border-b border-neutral-100 last:border-0">
                           <span className="text-sm text-neutral-500">{row.label}</span>
@@ -610,6 +624,27 @@ export default function CustomersPage() {
                     <div className="text-center py-10">
                       <FileText className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
                       <p className="text-neutral-500">Payment history is available in the Collections page</p>
+                    </div>
+                  )}
+
+                  {detailTab === 'overview' && detailCustomer.metadata?.documents && (
+                    <div className="mt-6 pt-6 border-t border-neutral-100">
+                      <h4 className="text-sm font-bold text-neutral-900 mb-4 flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-primary-500" /> Attached Documents
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {detailCustomer.metadata.documents.map((doc: any, i: number) => (
+                          <div key={i} className="flex items-center gap-3 p-3 bg-neutral-50 rounded-xl border border-neutral-100 group">
+                            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center text-primary-500 shadow-sm">
+                              {doc.type === 'pdf' ? <FileText className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-neutral-900 truncate">{doc.name}</p>
+                              <p className="text-xs text-neutral-500">{doc.size || 'Unknown size'}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
