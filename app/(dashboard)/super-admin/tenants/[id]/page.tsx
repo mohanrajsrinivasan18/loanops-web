@@ -468,7 +468,7 @@ function formatFeatureName(name: string): string {
     .trim();
 }
 
-function StatCard({ title, value, limit, icon, color }: any) {
+function StatCard({ title, value, limit, icon, color }: { title: string; value: number; limit?: number; icon: React.ReactNode; color: string }) {
   const colors: Record<string, string> = {
     blue: 'bg-blue-50 text-blue-600',
     green: 'bg-green-50 text-green-600',
@@ -513,7 +513,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function LimitField({ label, value, editing, onChange }: any) {
+function LimitField({ label, value, editing, onChange }: { label: string; value: number; editing: boolean; onChange: (value: string) => void }) {
   return (
     <div>
       <label className="text-sm text-gray-500 block mb-1">{label}</label>
