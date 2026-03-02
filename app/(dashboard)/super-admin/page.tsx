@@ -60,6 +60,11 @@ export default function SuperAdminDashboard() {
       const token = localStorage.getItem('token');
       if (!token) {
         setError('No authentication token found. Please login again.');
+        // Redirect to login after 2 seconds
+        setTimeout(() => {
+          localStorage.clear();
+          window.location.href = '/login';
+        }, 2000);
         return;
       }
 
@@ -72,7 +77,16 @@ export default function SuperAdminDashboard() {
       if (response.success) {
         setStats(response.stats);
       } else {
-        setError(response.error || 'Failed to load stats');
+        // If unauthorized, redirect to login
+        if (response.error?.includes('Unauthorized') || response.error?.includes('authorization')) {
+          setError('Session expired. Redirecting to login...');
+          setTimeout(() => {
+            localStorage.clear();
+            window.location.href = '/login';
+          }, 2000);
+        } else {
+          setError(response.error || 'Failed to load stats');
+        }
       }
     } catch (error: any) {
       console.error('Failed to load stats:', error);
