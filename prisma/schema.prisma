@@ -39,6 +39,13 @@ model Tenant {
   User             User[]
   AuditLog         AuditLog[]
   Transaction      Transaction[]
+  
+  // SaaS Platform Relations
+  Subscription     TenantSubscription[]
+  Limits           TenantLimit?
+  Usage            TenantUsage[]
+  Features         TenantFeature[]
+  Invoices         Invoice[]
 
   @@index([businessType])
   @@index([status])
@@ -121,6 +128,7 @@ model Agent {
   area             String?
   status           String       @default("active")
   targetCollection Float        @default(0)
+  isShadowAgent    Boolean      @default(false)
   tenantId         String
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
@@ -134,6 +142,7 @@ model Agent {
   @@index([status])
   @@index([tenantId])
   @@index([phone])
+  @@index([isShadowAgent])
 }
 
 // ============================================================
@@ -357,4 +366,146 @@ model AuditLog {
   @@index([entity])
   @@index([tenantId])
   @@index([userId])
+}
+
+// ============================================================
+// SAAS PLATFORM - SUBSCRIPTION & BILLING
+// ============================================================
+
+model SubscriptionPlan {
+  id            String   @id @default(cuid())
+  name          String
+  description   String?
+  price         Float
+  billingCycle  String   // monthly, yearly
+  features      Json     // {sms: true, whatsapp: false, mapAnalytics: true}
+  limits        Json     // {maxUsers: 10, maxCustomers: 2000}
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  TenantSubscription TenantSubscription[]
+  
+  @@index([isActive])
+}
+
+model TenantSubscription {
+  id         String   @id @default(cuid())
+  tenantId   String
+  planId     String
+  status     String   // active, expired, cancelled, trial
+  startDate  DateTime
+  endDate    DateTime?
+  autoRenew  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  Tenant  Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  Plan    SubscriptionPlan @relation(fields: [planId], references: [id])
+  Invoice Invoice[]
+  
+  @@index([tenantId])
+  @@index([planId])
+  @@index([status])
+  @@index([endDate])
+}
+
+model TenantLimit {
+  id                String   @id @default(cuid())
+  tenantId          String   @unique
+  maxUsers          Int      @default(3)
+  maxCustomers      Int      @default(500)
+  maxLoansPerMonth  Int      @default(1000)
+  storageLimit      Int      @default(1024) // MB
+  apiCallsPerDay    Int      @default(10000)
+  smsCredits        Int      @default(100)
+  whatsappCredits   Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  Tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  @@index([tenantId])
+}
+
+model TenantUsage {
+  id              String   @id @default(cuid())
+  tenantId        String
+  date            DateTime @db.Date
+  usersCount      Int      @default(0)
+  customersCount  Int      @default(0)
+  loansCount      Int      @default(0)
+  storageUsed     Int      @default(0) // MB
+  apiCalls        Int      @default(0)
+  smsUsed         Int      @default(0)
+  whatsappUsed    Int      @default(0)
+  createdAt       DateTime @default(now())
+  
+  Tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  @@unique([tenantId, date])
+  @@index([tenantId])
+  @@index([date])
+}
+
+model TenantFeature {
+  id          String   @id @default(cuid())
+  tenantId    String
+  featureName String   // sms, whatsapp, mapAnalytics, advancedReports, customBranding, apiAccess, prioritySupport
+  enabled     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  Tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  @@unique([tenantId, featureName])
+  @@index([tenantId])
+  @@index([featureName])
+}
+
+model Invoice {
+  id              String   @id @default(cuid())
+  tenantId        String
+  subscriptionId  String?
+  invoiceNumber   String   @unique
+  amount          Float
+  tax             Float    @default(0)
+  totalAmount     Float
+  status          String   // pending, paid, failed, cancelled
+  dueDate         DateTime
+  paidDate        DateTime?
+  paymentMethod   String?  // razorpay, stripe, bank_transfer, cash
+  paymentId       String?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  Tenant       Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  Subscription TenantSubscription? @relation(fields: [subscriptionId], references: [id])
+  
+  @@index([tenantId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([invoiceNumber])
+}
+
+model PlatformAuditLog {
+  id          String   @id @default(cuid())
+  adminUserId String
+  tenantId    String?
+  action      String   // created_tenant, updated_plan, adjusted_limits, suspended_tenant, etc.
+  entity      String   // tenant, plan, subscription, invoice, etc.
+  entityId    String?
+  changes     Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  
+  @@index([adminUserId])
+  @@index([tenantId])
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
 }

@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
       // Create agent
       const agent = await tx.agent.create({
         data: {
-          id: `agent_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          id: `agent_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
           name,
           phone,
           email: cleanedEmail,
@@ -201,7 +201,7 @@ export async function POST(request: NextRequest) {
       // Create user
       const user = await tx.user.create({
         data: {
-          id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          id: `user_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
           phone,
           email: finalEmail,
           password: hashedPassword,

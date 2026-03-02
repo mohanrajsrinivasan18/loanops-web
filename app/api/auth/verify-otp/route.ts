@@ -125,25 +125,58 @@ export async function POST(request: NextRequest) {
 async function buildProfiles(phone: string) {
   const profiles: any[] = [];
 
-  // 1. Check User table (admin/owner accounts)
+  // 1. Check User table (admin/owner/super_admin accounts)
   const users = await prisma.user.findMany({
     where: { OR: [{ phone }, { email: phone }] },
     include: { Tenant: true },
   });
 
   for (const u of users) {
+    let currentAgentId = u.agentId;
+
+    // Auto-heal old business owners who don't have a shadow agent yet
+    // Skip for super_admin as they don't need shadow agents
+    if (u.role === 'admin' && !currentAgentId && u.tenantId) {
+      try {
+        const newAgent = await prisma.agent.create({
+          data: {
+            name: u.name || 'Admin',
+            phone: u.phone,
+            status: 'active',
+            tenantId: u.tenantId!,
+          },
+        });
+        await prisma.user.update({
+          where: { id: u.id },
+          data: { agentId: newAgent.id },
+        });
+        currentAgentId = newAgent.id;
+        console.log(`Auto-created shadow agent ${currentAgentId} for old admin ${u.id}`);
+      } catch (err) {
+        console.error('Failed to auto-heal admin agentId:', err);
+      }
+    }
+
+    // Build profile label based on role
+    let label = '';
+    if (u.role === 'super_admin') {
+      label = 'Super Admin (Platform)';
+    } else if (u.Tenant) {
+      label = `${u.Tenant.name} (${u.role === 'admin' ? 'Admin' : u.role})`;
+    } else {
+      label = `${u.name} (${u.role})`;
+    }
+
     profiles.push({
       userId: u.id,
       name: u.name,
       email: u.email,
       role: u.role,
-      agentId: u.agentId,
+      agentId: currentAgentId,
       customerId: u.customerId,
       tenantId: u.tenantId,
       tenant: u.Tenant ? { id: u.Tenant.id, name: u.Tenant.name, code: u.Tenant.code } : null,
-      label: u.Tenant
-        ? `${u.Tenant.name} (${u.role === 'admin' ? 'Admin' : u.role})`
-        : `${u.name} (${u.role})`,
+      label,
     });
   }
 

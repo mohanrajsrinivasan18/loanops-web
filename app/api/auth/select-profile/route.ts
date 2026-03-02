@@ -81,6 +81,15 @@ export async function POST(request: NextRequest) {
 
         const hashedPassword = await bcrypt.hash(cleanPhone, 10);
 
+        const agent = await tx.agent.create({
+          data: {
+            name,
+            phone: cleanPhone,
+            status: 'active',
+            tenantId: tenant.id,
+          },
+        });
+
         const user = await tx.user.create({
           data: {
             name,
@@ -89,10 +98,11 @@ export async function POST(request: NextRequest) {
             password: hashedPassword,
             role: 'admin',
             tenantId: tenant.id,
+            agentId: agent.id, // Link to the shadow agent
           },
         });
 
-        return { tenant, user };
+        return { tenant, user, agent };
       });
 
       const newToken = Buffer.from(
@@ -110,6 +120,7 @@ export async function POST(request: NextRequest) {
             email: result.user.email,
             phone: cleanPhone,
             role: 'admin',
+            agentId: result.agent.id,
             tenantId: result.tenant.id,
             tenant: { id: result.tenant.id, name: result.tenant.name, code: result.tenant.code },
           },

@@ -34,6 +34,7 @@ interface LineAnalytics {
   totalPending: number;
   notPaidCount: number;
   paidCount: number;
+  partialCount: number;
   expenses: number;
   collections: any[];
 }
@@ -143,6 +144,13 @@ export default function LinesPage() {
       const paidCollections = lineCollections.filter((c: any) => c.status === 'collected' || c.status === 'paid');
       const pendingCollections = lineCollections.filter((c: any) => c.status === 'pending');
       const notPaidCollections = lineCollections.filter((c: any) => c.status === 'not_paid');
+      
+      // Calculate partial payments (collected amount > 0 AND collected amount < due amount)
+      const partialPayments = lineCollections.filter((c: any) => {
+        const collectedAmount = Number(c.collectedAmount) || 0;
+        const dueAmount = Number(c.amount) || 0;
+        return collectedAmount > 0 && collectedAmount < dueAmount;
+      });
 
       const totalCollected = paidCollections.reduce((sum: number, c: any) => sum + (c.collectedAmount || c.amount || 0), 0);
       const totalPending = pendingCollections.reduce((sum: number, c: any) => sum + (c.amount || 0), 0);
@@ -154,6 +162,7 @@ export default function LinesPage() {
         totalPending,
         notPaidCount: notPaidCollections.length,
         paidCount: paidCollections.length,
+        partialCount: partialPayments.length,
         expenses: 0,
         collections: lineCollections,
       });
@@ -244,6 +253,13 @@ export default function LinesPage() {
     if (collectionFilter === 'paid') return lineAnalytics.collections.filter((c: any) => c.status === 'collected' || c.status === 'paid');
     if (collectionFilter === 'not_paid') return lineAnalytics.collections.filter((c: any) => c.status === 'not_paid');
     if (collectionFilter === 'pending') return lineAnalytics.collections.filter((c: any) => c.status === 'pending');
+    if (collectionFilter === 'partial') {
+      return lineAnalytics.collections.filter((c: any) => {
+        const collectedAmount = Number(c.collectedAmount) || 0;
+        const dueAmount = Number(c.amount) || 0;
+        return collectedAmount > 0 && collectedAmount < dueAmount;
+      });
+    }
     return lineAnalytics.collections;
   }, [lineAnalytics, collectionFilter]);
 
@@ -485,6 +501,7 @@ export default function LinesPage() {
                   { label: 'Collected', value: formatCurrency(lineAnalytics.totalCollected), icon: Wallet, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600', filter: null as string | null },
                   { label: 'Pending', value: formatCurrency(lineAnalytics.totalPending), icon: Clock, iconBg: 'bg-amber-50', iconColor: 'text-amber-600', filter: 'pending' },
                   { label: 'Paid', value: lineAnalytics.paidCount, icon: TrendingUp, iconBg: 'bg-green-50', iconColor: 'text-green-600', filter: 'paid' },
+                  { label: 'Partial', value: lineAnalytics.partialCount, icon: CheckCircle, iconBg: 'bg-orange-50', iconColor: 'text-orange-600', filter: 'partial' },
                   { label: 'Not Paid', value: lineAnalytics.notPaidCount, icon: XCircle, iconBg: 'bg-red-50', iconColor: 'text-red-600', filter: 'not_paid' },
                 ].map((stat) => {
                   const isActive = stat.filter !== null && collectionFilter === stat.filter;
@@ -600,7 +617,7 @@ export default function LinesPage() {
                   <div className="p-5 border-b border-neutral-100 flex items-center justify-between">
                     <h3 className="font-bold text-neutral-900">
                       Collections ({filteredCollections.length})
-                      {collectionFilter && <span className="text-sm font-medium text-primary-600 ml-2">• {collectionFilter === 'paid' ? 'Paid' : collectionFilter === 'not_paid' ? 'Not Paid' : 'Pending'}</span>}
+                      {collectionFilter && <span className="text-sm font-medium text-primary-600 ml-2">• {collectionFilter === 'paid' ? 'Paid' : collectionFilter === 'not_paid' ? 'Not Paid' : collectionFilter === 'partial' ? 'Partial' : 'Pending'}</span>}
                     </h3>
                     {collectionFilter && (
                       <button onClick={() => setCollectionFilter(null)} className="text-xs flex items-center gap-1 px-2.5 py-1 bg-primary-50 text-primary-600 rounded-lg hover:bg-primary-100 transition-all font-semibold">
@@ -655,7 +672,7 @@ export default function LinesPage() {
                 <div className="card-modern p-12 text-center mb-6">
                   <Wallet className="w-10 h-10 text-neutral-300 mx-auto mb-3" />
                   <p className="text-neutral-500 font-medium">
-                    {collectionFilter ? `No ${collectionFilter === 'paid' ? 'paid' : collectionFilter === 'not_paid' ? 'not paid' : 'pending'} collections` : 'No collections for this date'}
+                    {collectionFilter ? `No ${collectionFilter === 'paid' ? 'paid' : collectionFilter === 'not_paid' ? 'not paid' : collectionFilter === 'partial' ? 'partial' : 'pending'} collections` : 'No collections for this date'}
                   </p>
                   {!collectionFilter && <p className="text-xs text-neutral-400 mt-1">Try navigating to a different {getDateStepLabel().toLowerCase()}</p>}
                   {collectionFilter && (

@@ -18,7 +18,18 @@ export default function Sidebar() {
 
   const navItems = getNavigationForRole(user.role);
 
-  const groupedNav = {
+  // Different grouping for super admin
+  const groupedNav = user.role === 'super_admin' ? {
+    platform: navItems.filter(item =>
+      ['Platform Overview', 'Tenants'].includes(item.label)
+    ),
+    features: navItems.filter(item =>
+      ['Plans & Pricing', 'Billing & Revenue', 'Feature Flags'].includes(item.label)
+    ),
+    analytics: navItems.filter(item =>
+      ['Analytics'].includes(item.label)
+    ),
+  } : {
     main: navItems.filter(item =>
       ['Dashboard', 'Customers', 'Loans', 'Lines'].includes(item.label)
     ),
@@ -126,29 +137,54 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 px-2.5 py-1 overflow-y-auto scrollbar-thin">
-          {groupedNav.main.length > 0 && (
-            <div>
-              <SectionTitle title="Main" />
-              <ul className="space-y-0.5">{groupedNav.main.map(item => <li key={item.href}><NavItem item={item} /></li>)}</ul>
-            </div>
-          )}
-          {groupedNav.management.length > 0 && (
-            <div>
-              <SectionTitle title="Management" />
-              <ul className="space-y-0.5">{groupedNav.management.map(item => <li key={item.href}><NavItem item={item} /></li>)}</ul>
-            </div>
-          )}
-          {groupedNav.analytics.length > 0 && (
-            <div>
-              <SectionTitle title="Analytics" />
-              <ul className="space-y-0.5">{groupedNav.analytics.map(item => <li key={item.href}><NavItem item={item} /></li>)}</ul>
-            </div>
-          )}
-          {groupedNav.settings.length > 0 && (
-            <div>
-              <SectionTitle title="Settings" />
-              <ul className="space-y-0.5">{groupedNav.settings.map(item => <li key={item.href}><NavItem item={item} /></li>)}</ul>
-            </div>
+          {user.role === 'super_admin' ? (
+            <>
+              {groupedNav.platform && groupedNav.platform.length > 0 && (
+                <div>
+                  <SectionTitle title="Platform" />
+                  <ul className="space-y-0.5">{groupedNav.platform.map(item => <li key={item.href}><NavItem item={item} /></li>)}</ul>
+                </div>
+              )}
+              {groupedNav.features && groupedNav.features.length > 0 && (
+                <div>
+                  <SectionTitle title="Features" />
+                  <ul className="space-y-0.5">{groupedNav.features.map(item => <li key={item.href}><NavItem item={item} /></li>)}</ul>
+                </div>
+              )}
+              {groupedNav.analytics && groupedNav.analytics.length > 0 && (
+                <div>
+                  <SectionTitle title="Analytics" />
+                  <ul className="space-y-0.5">{groupedNav.analytics.map(item => <li key={item.href}><NavItem item={item} /></li>)}</ul>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {groupedNav.main && groupedNav.main.length > 0 && (
+                <div>
+                  <SectionTitle title="Main" />
+                  <ul className="space-y-0.5">{groupedNav.main.map(item => <li key={item.href}><NavItem item={item} /></li>)}</ul>
+                </div>
+              )}
+              {groupedNav.management && groupedNav.management.length > 0 && (
+                <div>
+                  <SectionTitle title="Management" />
+                  <ul className="space-y-0.5">{groupedNav.management.map(item => <li key={item.href}><NavItem item={item} /></li>)}</ul>
+                </div>
+              )}
+              {groupedNav.analytics && groupedNav.analytics.length > 0 && (
+                <div>
+                  <SectionTitle title="Analytics" />
+                  <ul className="space-y-0.5">{groupedNav.analytics.map(item => <li key={item.href}><NavItem item={item} /></li>)}</ul>
+                </div>
+              )}
+              {groupedNav.settings && groupedNav.settings.length > 0 && (
+                <div>
+                  <SectionTitle title="Settings" />
+                  <ul className="space-y-0.5">{groupedNav.settings.map(item => <li key={item.href}><NavItem item={item} /></li>)}</ul>
+                </div>
+              )}
+            </>
           )}
         </nav>
 

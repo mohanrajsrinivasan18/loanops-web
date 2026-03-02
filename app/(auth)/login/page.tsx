@@ -7,7 +7,18 @@ type LoginMode = 'password' | 'otp';
 type OTPStep = 'phone' | 'verify' | 'select_profile';
 
 export default function LoginPage() {
-  const { login, loginWithUserData } = useAuth();
+  const auth = useAuth();
+  
+  // Add safety check
+  if (!auth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-neutral-500">Loading authentication...</p>
+      </div>
+    );
+  }
+  
+  const { login, loginWithUserData } = auth;
   const [loginMode, setLoginMode] = useState<LoginMode>('password');
 
   // Password states
@@ -46,7 +57,7 @@ export default function LoginPage() {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       const user = JSON.parse(userStr);
-      if (user.role === 'super_admin') window.location.href = '/saas';
+      if (user.role === 'super_admin') window.location.href = '/super-admin';
       else if (user.role === 'customer') window.location.href = '/customers';
       else window.location.href = '/dashboard';
     } else {
@@ -118,8 +129,12 @@ export default function LoginPage() {
 
       if (res.ok) {
         if (data.action === 'logged_in') {
-          loginWithUserData(data.user, data.token);
-          redirectUser();
+          if (loginWithUserData) {
+            loginWithUserData(data.user, data.token);
+            redirectUser();
+          } else {
+            setError('Authentication system error. Please refresh the page.');
+          }
         } else if (data.action === 'select_profile') {
           setProfiles(data.profiles);
           setOtpToken(data.token);
@@ -156,8 +171,12 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
-        loginWithUserData(data.user, data.token);
-        redirectUser();
+        if (loginWithUserData) {
+          loginWithUserData(data.user, data.token);
+          redirectUser();
+        } else {
+          setError('Authentication system error. Please refresh the page.');
+        }
       } else {
         throw new Error(data.error || 'Profile selection failed');
       }

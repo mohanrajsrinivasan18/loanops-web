@@ -23,6 +23,7 @@ export default function ReportsPage() {
   const tenantName = (user as any)?.tenant?.name || selectedTenant?.name || 'LoanOps';
 
   const reportTypes = [
+    { id: 'customer-payment', title: 'Customer Payment Summary', desc: 'Select customers and download payment status reports with filters', icon: Users, bg: 'bg-purple-50', ic: 'text-purple-600', isLink: true, href: '/customer-payment-summary' },
     { id: 'collection', title: 'Collection Report', desc: 'Every collection row — paid, not paid, pending — for the period', icon: DollarSign, bg: 'bg-emerald-50', ic: 'text-emerald-600' },
     { id: 'line', title: 'Line-wise Report', desc: 'All lines with daily/weekly/monthly collection data per line', icon: GitBranch, bg: 'bg-primary-50', ic: 'text-primary-600' },
     { id: 'loan', title: 'Loan Portfolio', desc: 'All active loans with customer, amount, outstanding, status', icon: Wallet, bg: 'bg-primary-50', ic: 'text-primary-600' },
@@ -328,26 +329,49 @@ export default function ReportsPage() {
 
       <div className="p-8 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {reportTypes.map((r, i) => (
-            <button key={r.id} onClick={() => generateReport(r.id)} disabled={generating !== null}
-              className={`card-modern p-6 text-left hover:shadow-card-hover transition-all animate-slide-up ${generating !== null ? 'opacity-60' : ''}`}
-              style={{ animationDelay: `${i * 0.05}s` }}>
-              <div className="flex items-start gap-4">
-                <div className={`p-3 ${r.bg} rounded-xl`}>
-                  <r.icon className={`w-6 h-6 ${r.ic}`} />
+          {reportTypes.map((r, i) => {
+            if (r.isLink && r.href) {
+              return (
+                <a key={r.id} href={r.href}
+                  className={`card-modern p-6 text-left hover:shadow-card-hover transition-all animate-slide-up block`}
+                  style={{ animationDelay: `${i * 0.05}s` }}>
+                  <div className="flex items-start gap-4">
+                    <div className={`p-3 ${r.bg} rounded-xl`}>
+                      <r.icon className={`w-6 h-6 ${r.ic}`} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold text-neutral-900 mb-1">{r.title}</h3>
+                      <p className="text-sm text-neutral-500">{r.desc}</p>
+                    </div>
+                    <div className="p-2 bg-neutral-100 rounded-lg">
+                      <FileText className="w-4 h-4 text-neutral-600" />
+                    </div>
+                  </div>
+                </a>
+              );
+            }
+            
+            return (
+              <button key={r.id} onClick={() => generateReport(r.id)} disabled={generating !== null}
+                className={`card-modern p-6 text-left hover:shadow-card-hover transition-all animate-slide-up ${generating !== null ? 'opacity-60' : ''}`}
+                style={{ animationDelay: `${i * 0.05}s` }}>
+                <div className="flex items-start gap-4">
+                  <div className={`p-3 ${r.bg} rounded-xl`}>
+                    <r.icon className={`w-6 h-6 ${r.ic}`} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-neutral-900 mb-1">{r.title}</h3>
+                    <p className="text-sm text-neutral-500">{r.desc}</p>
+                  </div>
+                  {generating === r.id ? (
+                    <Loader2 className="w-5 h-5 text-primary-600 animate-spin" />
+                  ) : (
+                    <div className="p-2 bg-neutral-100 rounded-lg"><Printer className="w-4 h-4 text-neutral-600" /></div>
+                  )}
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-neutral-900 mb-1">{r.title}</h3>
-                  <p className="text-sm text-neutral-500">{r.desc}</p>
-                </div>
-                {generating === r.id ? (
-                  <Loader2 className="w-5 h-5 text-primary-600 animate-spin" />
-                ) : (
-                  <div className="p-2 bg-neutral-100 rounded-lg"><Printer className="w-4 h-4 text-neutral-600" /></div>
-                )}
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
 
         <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 flex items-start gap-3">

@@ -24,14 +24,23 @@ export function BrandingProvider({
   });
 
   useEffect(() => {
-    fetch('/api/branding')
+    // Skip branding fetch if no tenantId (e.g., super admin)
+    if (!tenantId || tenantId === 't1') {
+      return;
+    }
+
+    fetch(`/api/branding?tenantId=${tenantId}`)
       .then(r => r.json())
       .then(data => {
-        const config = data[tenantId];
-        if (config) {
-          setBranding(config);
-          document.documentElement.style.setProperty('--primary', config.primaryColor);
-          document.documentElement.style.setProperty('--secondary', config.secondaryColor);
+        if (data && !data.error) {
+          setBranding({
+            primaryColor: data.primaryColor || '#3b82f6',
+            secondaryColor: data.secondaryColor || '#8b5cf6',
+            companyName: data.companyName || 'LoanOps',
+            logo: data.logo
+          });
+          document.documentElement.style.setProperty('--primary', data.primaryColor || '#3b82f6');
+          document.documentElement.style.setProperty('--secondary', data.secondaryColor || '#8b5cf6');
         }
       })
       .catch(() => {

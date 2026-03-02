@@ -24,61 +24,29 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const isSuperAdmin = user?.role === 'super_admin';
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Fetch tenants from API
-  useEffect(() => {
-    const fetchTenants = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/tenants');
-        const result = await response.json();
-        
-        if (result.success && result.data) {
-          setTenants(result.data);
-        }
-      } catch (error) {
-        console.error('Error fetching tenants:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user) {
-      fetchTenants();
-    }
-  }, [user]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (loading || tenants.length === 0) return;
-
-    // For super admin, load last selected tenant or default to first
-    if (isSuperAdmin) {
-      const savedTenantId = localStorage.getItem('selectedTenantId');
-      if (savedTenantId) {
-        const tenant = tenants.find(t => t.id === savedTenantId);
-        if (tenant) {
-          setSelectedTenant(tenant);
-        } else {
-          setSelectedTenant(tenants[0]);
-        }
-      } else {
-        setSelectedTenant(tenants[0]);
-      }
-    } else if (user?.tenantId) {
-      // For regular users, set their tenant
-      const userTenant = tenants.find(t => t.id === user.tenantId);
-      if (userTenant) {
-        setSelectedTenant(userTenant);
-      }
+    // Super admin doesn't need tenant context — they have their own pages
+    if (!user || isSuperAdmin) {
+      setLoading(false);
+      return;
     }
-  }, [user, isSuperAdmin, tenants, loading]);
+
+    // For regular users, set their tenant directly from user data
+    if (user.tenantId) {
+      setSelectedTenant({
+        id: user.tenantId,
+        name: '',
+        code: '',
+        status: 'active',
+      });
+      setLoading(false);
+    }
+  }, [user, isSuperAdmin]);
 
   const handleSetSelectedTenant = (tenant: Tenant | null) => {
     setSelectedTenant(tenant);
-    if (tenant) {
-      localStorage.setItem('selectedTenantId', tenant.id);
-    }
   };
 
   return (

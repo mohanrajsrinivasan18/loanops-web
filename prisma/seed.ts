@@ -118,6 +118,7 @@ async function main() {
   await prisma.user.create({
     data: {
       email: 'admin@loanops.com',
+      phone: '9999999999', // Super admin phone for OTP login
       name: 'Super Admin',
       password: await bcrypt.hash('admin123', 10),
       role: 'super_admin',

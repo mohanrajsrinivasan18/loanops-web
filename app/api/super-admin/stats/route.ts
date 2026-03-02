@@ -1,102 +1,237 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { addCorsHeaders, corsOptions } from '@/lib/apiCors';
+import { verifyAuth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-/**
- * GET /api/super-admin/stats
- * Get aggregated statistics for all tenants (Super Admin only)
- */
 export async function GET(request: NextRequest) {
   try {
-    // Get all tenants with their statistics
-    const tenants = await prisma.tenant.findMany({
+    const auth = await verifyAuth(request);
+    
+    if (!auth.user || auth.user.role !== 'super_admin') {
+      console.error('Super admin stats 403:', {
+        hasUser: !!auth.user,
+        role: auth.user?.role,
+        authError: auth.error,
+        hasAuthHeader: !!request.headers.get('authorization'),
+      });
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized', debug: { authError: auth.error, hasUser: !!auth.user, role: auth.user?.role } },
+        { status: 403 }
+      );
+    }
+
+    // Get tenant statistics
+    const [
+      totalTenants,
+      activeTenants,
+      trialTenants,
+      expiredTenants,
+      suspendedTenants,
+      totalUsers,
+      totalCustomers,
+      totalLoans,
+      totalCollections,
+      recentTenants,
+      subscriptions,
+      invoices
+    ] = await Promise.all([
+      // Total tenants
+      prisma.tenant.count(),
+      
+      // Active tenants
+      prisma.tenant.count({ where: { status: 'active' } }),
+      
+      // Trial tenants
+      prisma.tenantSubscription.count({ where: { status: 'trial' } }),
+      
+      // Expired tenants
+      prisma.tenantSubscription.count({ where: { status: 'expired' } }),
+      
+      // Suspended tenants
+      prisma.tenant.count({ where: { status: 'suspended' } }),
+      
+      // Total users across all tenants
+      prisma.user.count(),
+      
+      // Total customers
+      prisma.customer.count(),
+      
+      // Total loans
+      prisma.loan.count(),
+      
+      // Total collections amount
+      prisma.collection.aggregate({
+        where: { status: 'collected' },
+        _sum: { collectedAmount: true }
+      }),
+      
+      // Recent tenants (last 5)
+      prisma.tenant.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          status: true,
+          plan: true,
+          createdAt: true,
+          ownerName: true,
+          ownerPhone: true
+        }
+      }),
+      
+      // Active subscriptions for revenue calculation
+      prisma.tenantSubscription.findMany({
+        where: { status: 'active' },
+        include: {
+          Plan: {
+            select: {
+              price: true,
+              billingCycle: true
+            }
+          }
+        }
+      }),
+      
+      // Recent invoices
+      prisma.invoice.findMany({
+        where: { status: 'paid' },
+        orderBy: { paidDate: 'desc' },
+        take: 10,
+        select: {
+          totalAmount: true,
+          paidDate: true
+        }
+      })
+    ]);
+
+    // Calculate MRR (Monthly Recurring Revenue)
+    let mrr = 0;
+    subscriptions.forEach(sub => {
+      if (sub.Plan.billingCycle === 'monthly') {
+        mrr += sub.Plan.price;
+      } else if (sub.Plan.billingCycle === 'yearly') {
+        mrr += sub.Plan.price / 12;
+      }
+    });
+
+    // Calculate ARR (Annual Recurring Revenue)
+    const arr = mrr * 12;
+
+    // Calculate total revenue from paid invoices
+    const totalRevenue = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+
+    // Get limit alerts (tenants near their limits)
+    const tenantsWithLimits = await prisma.tenant.findMany({
+      where: { status: 'active' },
       include: {
+        Limits: true,
         _count: {
           select: {
-            Customer: true,
-            Loan: true,
-            Agent: true,
             User: true,
-          },
-        },
-        Loan: {
-          where: {
-            status: 'active',
-          },
-          select: {
-            amount: true,
-            outstanding: true,
-          },
-        },
-      },
+            Customer: true,
+            Loan: true
+          }
+        }
+      }
     });
 
-    // Calculate statistics for each tenant
-    const tenantStats = tenants.map((tenant) => {
-      const totalDisbursed = tenant.Loan.reduce((sum, loan) => sum + loan.amount, 0);
-      const totalOutstanding = tenant.Loan.reduce((sum, loan) => sum + loan.outstanding, 0);
-      const totalCollected = totalDisbursed - totalOutstanding;
+    const limitAlerts = tenantsWithLimits
+      .map(tenant => {
+        if (!tenant.Limits) return null;
+        
+        const alerts = [];
+        
+        // Check users limit
+        if (tenant._count.User >= tenant.Limits.maxUsers * 0.8) {
+          alerts.push({
+            tenantId: tenant.id,
+            tenantName: tenant.name,
+            type: 'users',
+            message: `Users: ${tenant._count.User}/${tenant.Limits.maxUsers}`,
+            percentage: Math.round((tenant._count.User / tenant.Limits.maxUsers) * 100)
+          });
+        }
+        
+        // Check customers limit
+        if (tenant._count.Customer >= tenant.Limits.maxCustomers * 0.8) {
+          alerts.push({
+            tenantId: tenant.id,
+            tenantName: tenant.name,
+            type: 'customers',
+            message: `Customers: ${tenant._count.Customer}/${tenant.Limits.maxCustomers}`,
+            percentage: Math.round((tenant._count.Customer / tenant.Limits.maxCustomers) * 100)
+          });
+        }
+        
+        return alerts;
+      })
+      .filter(Boolean)
+      .flat()
+      .slice(0, 5);
 
-      return {
-        id: tenant.id,
-        name: tenant.name,
-        code: tenant.code,
-        status: tenant.status,
-        plan: tenant.plan,
-        createdAt: tenant.createdAt,
-        stats: {
-          customers: tenant._count.Customer,
-          agents: tenant._count.Agent,
-          users: tenant._count.User,
-          loans: {
-            total: tenant._count.Loan,
-            active: tenant.Loan.length,
-          },
-          financial: {
-            totalDisbursed,
-            totalOutstanding,
-            totalCollected,
-          },
-        },
-      };
+    // Calculate growth rate (simplified - comparing last 30 days vs previous 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const sixtyDaysAgo = new Date();
+    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+    const [recentTenantsCount, previousTenantsCount] = await Promise.all([
+      prisma.tenant.count({
+        where: { createdAt: { gte: thirtyDaysAgo } }
+      }),
+      prisma.tenant.count({
+        where: {
+          createdAt: {
+            gte: sixtyDaysAgo,
+            lt: thirtyDaysAgo
+          }
+        }
+      })
+    ]);
+
+    const growthRate = previousTenantsCount > 0
+      ? Math.round(((recentTenantsCount - previousTenantsCount) / previousTenantsCount) * 100)
+      : 0;
+
+    // Calculate churn rate (tenants that became inactive in last 30 days)
+    const churnedTenants = await prisma.tenant.count({
+      where: {
+        status: { in: ['suspended', 'inactive'] },
+        updatedAt: { gte: thirtyDaysAgo }
+      }
     });
+    const churnRate = totalTenants > 0 ? ((churnedTenants / totalTenants) * 100).toFixed(1) : '0';
 
-    // Calculate overall statistics
-    const overallStats = {
-      totalTenants: tenants.length,
-      activeTenants: tenants.filter((t) => t.status === 'active').length,
-      trialTenants: tenants.filter((t) => t.status === 'trial').length,
-      suspendedTenants: tenants.filter((t) => t.status === 'suspended').length,
-      totalCustomers: tenantStats.reduce((sum, t) => sum + t.stats.customers, 0),
-      totalAgents: tenantStats.reduce((sum, t) => sum + t.stats.agents, 0),
-      totalUsers: tenantStats.reduce((sum, t) => sum + t.stats.users, 0),
-      totalLoans: tenantStats.reduce((sum, t) => sum + t.stats.loans.total, 0),
-      activeLoans: tenantStats.reduce((sum, t) => sum + t.stats.loans.active, 0),
-      totalDisbursed: tenantStats.reduce((sum, t) => sum + t.stats.financial.totalDisbursed, 0),
-      totalOutstanding: tenantStats.reduce((sum, t) => sum + t.stats.financial.totalOutstanding, 0),
-      totalCollected: tenantStats.reduce((sum, t) => sum + t.stats.financial.totalCollected, 0),
+    const stats = {
+      totalTenants,
+      activeTenants,
+      trialTenants,
+      expiredTenants,
+      suspendedTenants,
+      totalRevenue: Math.round(totalRevenue),
+      mrr: Math.round(mrr),
+      arr: Math.round(arr),
+      totalUsers,
+      totalCustomers,
+      totalLoans,
+      totalCollections: totalCollections._sum.collectedAmount || 0,
+      growthRate,
+      churnRate: parseFloat(churnRate),
+      recentTenants,
+      limitAlerts
     };
 
-    return addCorsHeaders(NextResponse.json({
+    return NextResponse.json({
       success: true,
-      data: {
-        overall: overallStats,
-        tenants: tenantStats,
-      },
-    }));
-  } catch (error: any) {
-    console.error('Super admin stats error:', error);
-    return addCorsHeaders(NextResponse.json(
-      {
-        success: false,
-        error: 'Failed to fetch super admin statistics',
-        details: error.message,
-      },
-      { status: 500 }
-    ));
-  }
-}
+      stats
+    });
 
-export async function OPTIONS() {
-  return corsOptions();
+  } catch (error) {
+    console.error('Stats API error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch statistics' },
+      { status: 500 }
+    );
+  }
 }

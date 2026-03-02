@@ -128,6 +128,9 @@ export async function POST(request: NextRequest) {
       console.log('Tenant created:', tenant.id);
     }
 
+    // NOTE: Shadow agents are NOT created automatically
+    // They are only created when admin explicitly chooses to create one when adding an agent
+
     // Return user data and token
     const response = NextResponse.json({
       token,
