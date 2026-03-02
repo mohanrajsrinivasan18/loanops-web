@@ -57,7 +57,6 @@ export async function POST(request: NextRequest) {
     });
 
     // Find ALL profiles linked to this phone number
-    // A phone can be: admin (owner), agent, or customer across multiple businesses
     const profiles = await buildProfiles(cleanPhone);
 
     // If exactly one profile, auto-login
@@ -68,40 +67,10 @@ export async function POST(request: NextRequest) {
         data: { lastLoginAt: new Date() },
       });
 
-      // Clean up OTP since we're auto-logging in (no select-profile call)
+      // Clean up OTP since we're auto-logging in
       await prisma.otp.delete({ where: { id: otpRecord.id } });
 
-      // Generate proper token with userId
-      const userToken = Buffer.from(
-        JSON.stringify({ userId: profile.userId, timestamp: Date.now(), random: Math.random().toString(36) })
-      ).toString('base64');
-
-      return addCorsHeaders(
-        NextResponse.json({
-          success: true,
-          action: 'logged_in',
-          token: userToken,
-          user: {
-            id: profile.userId,
-            name: profile.name,
-            email: profile.email,
-            phone: cleanPhone,
-            role: profile.role,
-    // A phone can be: admin (owner), agent, or customer across multiple businesses
-    const profiles = await buildProfiles(cleanPhone);
-
-    // If exactly one profile, auto-login
-    if (profiles.length === 1) {
-      const profile = profiles[0];
-      await prisma.user.update({
-        where: { id: profile.userId },
-        data: { lastLoginAt: new Date() },
-      });
-
-      // Clean up OTP since we're auto-logging in (no select-profile call)
-      await prisma.otp.delete({ where: { id: otpRecord.id } });
-
-      // Generate proper token with userId
+      // Generate proper token with userId for API auth
       const userToken = Buffer.from(
         JSON.stringify({ userId: profile.userId, timestamp: Date.now(), random: Math.random().toString(36) })
       ).toString('base64');
@@ -129,7 +98,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Multiple profiles or no profile — let user choose
-    // Generate temporary token for profile selection (contains phone, not userId)
+    // Temporary token for profile selection (contains phone, not userId)
     const tempToken = Buffer.from(
       JSON.stringify({ phone: cleanPhone, timestamp: Date.now(), random: Math.random().toString(36) })
     ).toString('base64');
@@ -170,7 +139,6 @@ async function buildProfiles(phone: string) {
     let currentAgentId = u.agentId;
 
     // Auto-heal old business owners who don't have a shadow agent yet
-    // Skip for super_admin as they don't need shadow agents
     if (u.role === 'admin' && !currentAgentId && u.tenantId) {
       try {
         const newAgent = await prisma.agent.create({
@@ -192,7 +160,6 @@ async function buildProfiles(phone: string) {
       }
     }
 
-    // Build profile label based on role
     let label = '';
     if (u.role === 'super_admin') {
       label = 'Super Admin (Platform)';
@@ -222,7 +189,6 @@ async function buildProfiles(phone: string) {
   });
 
   for (const agent of agents) {
-    // Skip if already found via User table
     if (agent.User && profiles.some((p) => p.userId === agent.User!.id)) continue;
 
     if (agent.User) {
@@ -237,9 +203,8 @@ async function buildProfiles(phone: string) {
         label: `${agent.Tenant.name} (Agent)`,
       });
     } else {
-      // Agent exists but no User record yet — create one on first login
       profiles.push({
-        userId: null, // Will be created on profile select
+        userId: null,
         name: agent.name,
         email: null,
         role: 'agent',
