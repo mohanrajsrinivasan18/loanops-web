@@ -15,9 +15,7 @@ export async function createShadowAgent(
     const existingShadow = await prisma.agent.findFirst({
       where: {
         User: {
-          some: {
-            id: userId,
-          },
+          id: userId,
         },
         isShadowAgent: true,
         tenantId,
