@@ -141,7 +141,7 @@ async function buildProfiles(phone: string) {
         const newAgent = await prisma.agent.create({
           data: {
             name: u.name || 'Admin',
-            phone: u.phone,
+            phone: u.phone || '',
             status: 'active',
             tenantId: u.tenantId!,
           },
