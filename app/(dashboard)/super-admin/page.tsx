@@ -60,11 +60,6 @@ export default function SuperAdminDashboard() {
       const token = localStorage.getItem('token');
       if (!token) {
         setError('No authentication token found. Please login again.');
-        // Redirect to login after 2 seconds
-        setTimeout(() => {
-          localStorage.clear();
-          window.location.href = '/login';
-        }, 2000);
         return;
       }
 
@@ -77,16 +72,7 @@ export default function SuperAdminDashboard() {
       if (response.success) {
         setStats(response.stats);
       } else {
-        // If unauthorized, redirect to login
-        if (response.error?.includes('Unauthorized') || response.error?.includes('authorization')) {
-          setError('Session expired. Redirecting to login...');
-          setTimeout(() => {
-            localStorage.clear();
-            window.location.href = '/login';
-          }, 2000);
-        } else {
-          setError(response.error || 'Failed to load stats');
-        }
+        setError(response.error || 'Failed to load stats');
       }
     } catch (error: any) {
       console.error('Failed to load stats:', error);
@@ -114,14 +100,25 @@ export default function SuperAdminDashboard() {
       <div className="flex items-center justify-center h-screen bg-gray-50">
         <div className="text-center max-w-md">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Data</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={loadStats}
-            className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-          >
-            Retry
-          </button>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Authentication Error</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={loadStats}
+              className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+            >
+              Retry
+            </button>
+            <button
+              onClick={() => {
+                localStorage.clear();
+                window.location.href = '/login';
+              }}
+              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            >
+              Logout & Login Again
+            </button>
+          </div>
         </div>
       </div>
     );

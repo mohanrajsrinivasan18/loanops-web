@@ -60,10 +60,35 @@ export async function POST(request: NextRequest) {
     // A phone can be: admin (owner), agent, or customer across multiple businesses
     const profiles = await buildProfiles(cleanPhone);
 
-    // Generate token
-    const token = Buffer.from(
-      JSON.stringify({ phone: cleanPhone, timestamp: Date.now(), random: Math.random().toString(36) })
-    ).toString('base64');
+    // If exactly one profile, auto-login
+    if (profiles.length === 1) {
+      const profile = profiles[0];
+      await prisma.user.update({
+        where: { id: profile.userId },
+        data: { lastLoginAt: new Date() },
+      });
+
+      // Clean up OTP since we're auto-logging in (no select-profile call)
+      await prisma.otp.delete({ where: { id: otpRecord.id } });
+
+      // Generate proper token with userId
+      const userToken = Buffer.from(
+        JSON.stringify({ userId: profile.userId, timestamp: Date.now(), random: Math.random().toString(36) })
+      ).toString('base64');
+
+      return addCorsHeaders(
+        NextResponse.json({
+          success: true,
+          action: 'logged_in',
+          token: userToken,
+          user: {
+            id: profile.userId,
+            name: profile.name,
+            email: profile.email,
+            phone: cleanPhone,
+            role: profile.role,
+    // A phone can be: admin (owner), agent, or customer across multiple businesses
+    const profiles = await buildProfiles(cleanPhone);
 
     // If exactly one profile, auto-login
     if (profiles.length === 1) {
@@ -76,11 +101,16 @@ export async function POST(request: NextRequest) {
       // Clean up OTP since we're auto-logging in (no select-profile call)
       await prisma.otp.delete({ where: { id: otpRecord.id } });
 
+      // Generate proper token with userId
+      const userToken = Buffer.from(
+        JSON.stringify({ userId: profile.userId, timestamp: Date.now(), random: Math.random().toString(36) })
+      ).toString('base64');
+
       return addCorsHeaders(
         NextResponse.json({
           success: true,
           action: 'logged_in',
-          token,
+          token: userToken,
           user: {
             id: profile.userId,
             name: profile.name,
@@ -99,11 +129,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Multiple profiles or no profile — let user choose
+    // Generate temporary token for profile selection (contains phone, not userId)
+    const tempToken = Buffer.from(
+      JSON.stringify({ phone: cleanPhone, timestamp: Date.now(), random: Math.random().toString(36) })
+    ).toString('base64');
+
     return addCorsHeaders(
       NextResponse.json({
         success: true,
         action: profiles.length === 0 ? 'new_user' : 'select_profile',
-        token,
+        token: tempToken,
         phone: cleanPhone,
         profiles,
       }),
