@@ -34,6 +34,7 @@ model Tenant {
   Line             Line[]
   LineDailyFinance LineDailyFinance[]
   Loan             Loan[]
+  Chit             Chit[]
   Expense          Expense[]
   TenantSettings   TenantSettings?
   User             User[]
@@ -137,6 +138,7 @@ model Agent {
   Customer         Customer[]
   Line             Line[]
   Loan             Loan[]
+  Chit             Chit[]
   User             User?
 
   @@index([status])
@@ -172,6 +174,7 @@ model Customer {
   Tenant     Tenant       @relation(fields: [tenantId], references: [id])
   Collection Collection[]
   Loan       Loan[]
+  ChitMember ChitMember[]
   User       User?
 
   @@index([agentId])
@@ -241,6 +244,97 @@ model Collection {
   @@index([dueDate])
   @@index([loanId])
   @@index([status])
+  @@index([tenantId])
+}
+
+// ============================================================
+// CHIT FUNDS
+// ============================================================
+
+model Chit {
+  id              String        @id @default(cuid())
+  chitName        String
+  chitValue       Float
+  duration        Int
+  memberCount     Int
+  monthlyAmount   Float
+  status          String        @default("active")
+  startDate       DateTime
+  endDate         DateTime?
+  agentId         String?
+  tenantId        String
+  productType     String        @default("CHIT")
+  metadata        Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  ChitMembers     ChitMember[]
+  ChitAuctions    ChitAuction[]
+  ChitPayments    ChitPayment[]
+  Agent           Agent?        @relation(fields: [agentId], references: [id])
+  Tenant          Tenant        @relation(fields: [tenantId], references: [id])
+
+  @@index([agentId])
+  @@index([status])
+  @@index([tenantId])
+  @@index([productType])
+}
+
+model ChitMember {
+  id              String        @id @default(cuid())
+  chitId          String
+  customerId      String
+  memberNumber    Int
+  status          String        @default("active")
+  hasWonAuction   Boolean       @default(false)
+  wonAuctionMonth Int?
+  tenantId        String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  Chit            Chit          @relation(fields: [chitId], references: [id])
+  Customer        Customer      @relation(fields: [customerId], references: [id])
+  ChitPayments    ChitPayment[]
+
+  @@unique([chitId, memberNumber, tenantId])
+  @@index([chitId])
+  @@index([customerId])
+  @@index([tenantId])
+}
+
+model ChitAuction {
+  id              String   @id @default(cuid())
+  chitId          String
+  monthNumber     Int
+  auctionDate     DateTime
+  winnerMemberId  String?
+  bidAmount       Float?
+  dividendAmount  Float?
+  status          String   @default("pending")
+  tenantId        String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  Chit            Chit     @relation(fields: [chitId], references: [id])
+
+  @@unique([chitId, monthNumber, tenantId])
+  @@index([chitId])
+  @@index([tenantId])
+}
+
+model ChitPayment {
+  id           String     @id @default(cuid())
+  chitId       String
+  chitMemberId String
+  monthNumber  Int
+  amount       Float
+  paymentDate  DateTime?
+  status       String     @default("pending")
+  tenantId     String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  Chit         Chit       @relation(fields: [chitId], references: [id])
+  ChitMember   ChitMember @relation(fields: [chitMemberId], references: [id])
+
+  @@index([chitId])
+  @@index([chitMemberId])
   @@index([tenantId])
 }
 
