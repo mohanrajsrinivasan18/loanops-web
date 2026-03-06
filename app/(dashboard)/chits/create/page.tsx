@@ -2,11 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useAuth } from '@/lib/AuthProvider';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
 import { ArrowLeft } from 'lucide-react';
 
 export default function CreateChitPage() {
@@ -81,7 +80,7 @@ export default function CreateChitPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <Label htmlFor="chitName">Chit Name *</Label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Chit Name *</label>
             <Input
               id="chitName"
               placeholder="e.g., Chit Group A - March 2026"
@@ -93,7 +92,7 @@ export default function CreateChitPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="chitValue">Total Chit Value *</Label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Total Chit Value *</label>
               <Input
                 id="chitValue"
                 type="number"
@@ -106,7 +105,7 @@ export default function CreateChitPage() {
             </div>
 
             <div>
-              <Label htmlFor="duration">Duration (Months) *</Label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Duration (Months) *</label>
               <Input
                 id="duration"
                 type="number"
@@ -120,7 +119,7 @@ export default function CreateChitPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="memberCount">Number of Members *</Label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Number of Members *</label>
               <Input
                 id="memberCount"
                 type="number"
@@ -133,7 +132,7 @@ export default function CreateChitPage() {
             </div>
 
             <div>
-              <Label htmlFor="monthlyAmount">Monthly Amount per Member *</Label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Monthly Amount per Member *</label>
               <Input
                 id="monthlyAmount"
                 type="number"
@@ -146,7 +145,7 @@ export default function CreateChitPage() {
           </div>
 
           <div>
-            <Label htmlFor="startDate">Start Date *</Label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Start Date *</label>
             <Input
               id="startDate"
               type="date"

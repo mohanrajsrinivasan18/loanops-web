@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/lib/AuthProvider';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
 import { Plus, Users, Calendar, TrendingUp } from 'lucide-react';
 
 interface Chit {
@@ -94,54 +94,56 @@ export default function ChitsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {chits.map((chit) => (
-            <Card
+            <div
               key={chit.id}
-              className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
+              className="cursor-pointer"
               onClick={() => router.push(`/chits/${chit.id}`)}
             >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                    {chit.chitName}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {chit.duration} months • {chit.memberCount} members
-                  </p>
-                </div>
-                <Badge variant={chit.status === 'active' ? 'success' : 'secondary'}>
-                  {chit.status}
-                </Badge>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Chit Value</span>
-                  <span className="text-lg font-bold text-blue-600">
-                    {formatCurrency(chit.chitValue)}
-                  </span>
+              <Card className="p-6 hover:shadow-lg transition-shadow">
+                <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                      {chit.chitName}
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      {chit.duration} months • {chit.memberCount} members
+                    </p>
+                  </div>
+                  <Badge variant={chit.status === 'active' ? 'success' : 'secondary'}>
+                    {chit.status}
+                  </Badge>
                 </div>
 
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Monthly Amount</span>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {formatCurrency(chit.monthlyAmount)}
-                  </span>
-                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Chit Value</span>
+                    <span className="text-lg font-bold text-blue-600">
+                      {formatCurrency(chit.chitValue)}
+                    </span>
+                  </div>
 
-                <div className="pt-3 border-t border-gray-200">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center text-gray-600">
-                      <Users className="w-4 h-4 mr-1" />
-                      {chit._count?.ChitMembers || 0} enrolled
-                    </div>
-                    <div className="flex items-center text-gray-600">
-                      <TrendingUp className="w-4 h-4 mr-1" />
-                      {chit._count?.ChitAuctions || 0}/{chit.duration} auctions
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Monthly Amount</span>
+                    <span className="text-sm font-semibold text-gray-900">
+                      {formatCurrency(chit.monthlyAmount)}
+                    </span>
+                  </div>
+
+                  <div className="pt-3 border-t border-gray-200">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center text-gray-600">
+                        <Users className="w-4 h-4 mr-1" />
+                        {chit._count?.ChitMembers || 0} enrolled
+                      </div>
+                      <div className="flex items-center text-gray-600">
+                        <TrendingUp className="w-4 h-4 mr-1" />
+                        {chit._count?.ChitAuctions || 0}/{chit.duration} auctions
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
           ))}
         </div>
       )}
