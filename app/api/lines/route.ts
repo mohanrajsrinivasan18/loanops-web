@@ -259,11 +259,14 @@ export async function POST(request: NextRequest) {
     }
 
     if (!tenantId) {
+      console.log('ERROR: Missing tenantId in request');
       return respond(NextResponse.json({
         success: false,
         error: 'Tenant ID is required',
       }, { status: 400 }));
     }
+
+    console.log('Creating line for tenant:', tenantId, 'with name:', name);
 
     const normalizedType = type || 'daily';
     if (normalizedType === 'weekly' && !weeklyDay) {
@@ -273,18 +276,20 @@ export async function POST(request: NextRequest) {
       }, { status: 400 }));
     }
 
-    // Check if line with same name exists for tenant
+    // Check if line with same name exists for this tenant (only active lines)
     const existingLine = await prisma.line.findFirst({
       where: {
         name,
         tenantId,
+        status: 'active', // Only check active lines
       },
     });
 
     if (existingLine) {
+      console.log('Duplicate line found:', existingLine.id, 'for tenant:', tenantId);
       return respond(NextResponse.json({
         success: false,
-        error: 'Line with this name already exists',
+        error: 'Line with this name already exists for your organization',
       }, { status: 400 }));
     }
 

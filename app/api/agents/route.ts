@@ -160,12 +160,17 @@ export async function POST(request: NextRequest) {
       console.log('Using default tenant:', finalTenantId);
     }
 
-    // Check if phone already exists
-    const existingByPhone = await prisma.user.findFirst({ where: { phone } });
+    // Check if phone already exists for this tenant
+    const existingByPhone = await prisma.user.findFirst({ 
+      where: { 
+        phone,
+        tenantId: finalTenantId,
+      } 
+    });
     if (existingByPhone) {
       return respond(NextResponse.json({
         success: false,
-        error: 'Phone number already registered',
+        error: 'Phone number already registered in your organization',
       }, { status: 400 }));
     }
 
