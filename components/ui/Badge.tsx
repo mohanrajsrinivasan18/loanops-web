@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 
 interface BadgeProps {
   children: ReactNode;
-  variant?: 'success' | 'warning' | 'danger' | 'info' | 'purple' | 'neutral' | 'default';
+  variant?: 'success' | 'warning' | 'danger' | 'info' | 'purple' | 'neutral' | 'default' | 'secondary';
   size?: 'sm' | 'md' | 'lg';
   dot?: boolean;
   icon?: ReactNode;
@@ -17,6 +17,7 @@ function Badge({ children, variant = 'default', size = 'md', dot = false, icon }
     purple: 'badge-purple',
     neutral: 'badge-neutral',
     default: 'badge-neutral',
+    secondary: 'badge-neutral',
   };
 
   const sizes: Record<string, string> = {

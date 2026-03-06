@@ -46,6 +46,7 @@ model Tenant {
   Limits           TenantLimit?
   Usage            TenantUsage[]
   Features         TenantFeature[]
+  Products         TenantProduct[]
   Invoices         Invoice[]
 
   @@index([businessType])
@@ -556,6 +557,27 @@ model TenantFeature {
   @@unique([tenantId, featureName])
   @@index([tenantId])
   @@index([featureName])
+}
+
+// ============================================================
+// PRODUCT CONTROL (Super Admin)
+// ============================================================
+
+model TenantProduct {
+  id          String   @id @default(cuid())
+  tenantId    String
+  productType String   // LOAN, CHIT, GOLD_LOAN, PERSONAL_LOAN, INSURANCE, SAVINGS
+  enabled     Boolean  @default(true)
+  settings    Json?    // Product-specific settings
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  Tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  @@unique([tenantId, productType])
+  @@index([tenantId])
+  @@index([productType])
+  @@index([enabled])
 }
 
 model Invoice {

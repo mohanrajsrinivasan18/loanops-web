@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { chitService } from '@/lib/services/chitService';
+import { checkProductAccess } from '@/lib/middleware/productAccess';
 
 /**
  * GET /api/chits/[id]
@@ -16,6 +17,15 @@ export async function GET(
       return NextResponse.json(
         { success: false, error: 'Tenant ID required' },
         { status: 400 }
+      );
+    }
+
+    // Check product access
+    const hasAccess = await checkProductAccess(tenantId, 'CHIT');
+    if (!hasAccess) {
+      return NextResponse.json(
+        { success: false, error: 'Chit product is not enabled for this tenant' },
+        { status: 403 }
       );
     }
 

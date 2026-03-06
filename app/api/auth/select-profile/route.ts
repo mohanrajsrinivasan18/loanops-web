@@ -72,6 +72,16 @@ export async function POST(request: NextRequest) {
             ownerPhone: cleanPhone,
             status: 'active',
             plan: 'starter',
+            Products: {
+              create: [
+                { productType: 'LOAN', enabled: true },
+                { productType: 'CHIT', enabled: false },
+                { productType: 'GOLD_LOAN', enabled: false },
+                { productType: 'PERSONAL_LOAN', enabled: false },
+                { productType: 'INSURANCE', enabled: false },
+                { productType: 'SAVINGS', enabled: false },
+              ]
+            }
           },
         });
 

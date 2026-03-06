@@ -18,28 +18,53 @@ export default function Sidebar() {
 
   const navItems = getNavigationForRole(user.role);
 
+  // Filter navigation based on enabled products (for non-super_admin)
+  const [enabledProducts, setEnabledProducts] = useState<string[]>(['LOAN']);
+  
+  useEffect(() => {
+    if (user.role !== 'super_admin' && user.tenantId) {
+      fetch(`/api/tenants/${user.tenantId}/products`)
+        .then(res => res.json())
+        .then(data => {
+          const enabled = (data.data || [])
+            .filter((p: any) => p.enabled)
+            .map((p: any) => p.productType);
+          setEnabledProducts(enabled.length > 0 ? enabled : ['LOAN']);
+        })
+        .catch(() => setEnabledProducts(['LOAN']));
+    }
+  }, [user.tenantId, user.role]);
+
+  const filteredNavItems = user.role === 'super_admin' 
+    ? navItems 
+    : navItems.filter(item => {
+        if (item.label === 'Loans' && !enabledProducts.includes('LOAN')) return false;
+        if (item.label === 'Chit Funds' && !enabledProducts.includes('CHIT')) return false;
+        return true;
+      });
+
   // Different grouping for super admin
   const groupedNav = user.role === 'super_admin' ? {
-    platform: navItems.filter(item =>
+    platform: filteredNavItems.filter(item =>
       ['Platform Overview', 'Tenants'].includes(item.label)
     ),
-    features: navItems.filter(item =>
+    features: filteredNavItems.filter(item =>
       ['Plans & Pricing', 'Billing & Revenue', 'Feature Flags'].includes(item.label)
     ),
-    analytics: navItems.filter(item =>
+    analytics: filteredNavItems.filter(item =>
       ['Analytics'].includes(item.label)
     ),
   } : {
-    main: navItems.filter(item =>
-      ['Dashboard', 'Customers', 'Loans', 'Lines'].includes(item.label)
+    main: filteredNavItems.filter(item =>
+      ['Dashboard', 'Customers', 'Loans', 'Chit Funds', 'Lines'].includes(item.label)
     ),
-    management: navItems.filter(item =>
+    management: filteredNavItems.filter(item =>
       ['Agents', 'Tenants'].includes(item.label)
     ),
-    analytics: navItems.filter(item =>
+    analytics: filteredNavItems.filter(item =>
       ['Reports', 'Analytics', 'Map Analytics', 'System Analytics', 'Risk'].includes(item.label)
     ),
-    settings: navItems.filter(item =>
+    settings: filteredNavItems.filter(item =>
       ['Settings', 'Config', 'System Config', 'Billing'].includes(item.label)
     ),
   };

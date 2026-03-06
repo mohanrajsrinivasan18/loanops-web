@@ -22,6 +22,7 @@ export const navigationItems: NavItem[] = [
   // Core Modules - Admin and Solo Owner ONLY (NOT super_admin)
   { label: 'Customers', href: '/customers', icon: 'Users', roles: ['admin', 'solo_owner'] },
   { label: 'Loans', href: '/loans', icon: 'DollarSign', roles: ['admin', 'solo_owner'] },
+  { label: 'Chit Funds', href: '/chits', icon: 'Users2', roles: ['admin', 'solo_owner'] },
   { label: 'Lines', href: '/lines', icon: 'GitBranch', roles: ['admin', 'solo_owner'] },
 
   // Team Management - Admin only

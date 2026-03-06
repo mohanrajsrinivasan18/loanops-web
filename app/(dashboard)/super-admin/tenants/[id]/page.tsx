@@ -167,6 +167,13 @@ export default function TenantDetailPage() {
             </div>
             
             <div className="flex gap-2">
+              <button
+                onClick={() => router.push(`/super-admin/tenants/${params.id}/products`)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                <Settings className="w-5 h-5" />
+                Manage Products
+              </button>
               {tenant.status === 'active' ? (
                 <button
                   onClick={() => updateStatus('suspended')}
