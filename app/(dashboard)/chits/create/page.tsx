@@ -80,6 +80,12 @@ export default function CreateChitPage() {
           type="submit"
           form="chit-form"
           disabled={loading}
+          style={{
+            display: 'block',
+            visibility: 'visible',
+            opacity: 1,
+            zIndex: 1000,
+          }}
           className="px-8 py-3 bg-blue-600 text-white text-base font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg"
         >
           {loading ? '⏳ Creating...' : '✓ Save Chit Fund'}
@@ -167,10 +173,15 @@ export default function CreateChitPage() {
           </div>
 
           {/* Bottom Save Button */}
-          <div className="flex gap-4 pt-6 border-t-2 border-gray-200 mt-8 sticky bottom-0 bg-white pb-4">
+          <div className="flex gap-4 pt-6 border-t-2 border-gray-200 mt-8" style={{ display: 'flex', visibility: 'visible', opacity: 1 }}>
             <button
               type="submit"
               disabled={loading}
+              style={{
+                display: 'block',
+                visibility: 'visible',
+                opacity: 1,
+              }}
               className="flex-1 px-8 py-4 bg-green-600 text-white text-lg font-bold rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg hover:shadow-xl"
             >
               {loading ? '⏳ Creating...' : '✓ Save Chit Fund'}
