@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
         Products: {
           create: [
             { productType: 'LOAN', enabled: true },
-            { productType: 'CHIT', enabled: false },
+            { productType: 'CHIT', enabled: true },
             { productType: 'GOLD_LOAN', enabled: false },
             { productType: 'PERSONAL_LOAN', enabled: false },
             { productType: 'INSURANCE', enabled: false },

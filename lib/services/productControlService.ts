@@ -127,7 +127,7 @@ export const productControlService = {
   initializeDefaultProducts: async (tenantId: string) => {
     const defaultProducts: { productType: ProductType; enabled: boolean }[] = [
       { productType: 'LOAN', enabled: true },
-      { productType: 'CHIT', enabled: false },
+      { productType: 'CHIT', enabled: true }, // Enabled by default
       { productType: 'GOLD_LOAN', enabled: false },
       { productType: 'PERSONAL_LOAN', enabled: false },
       { productType: 'INSURANCE', enabled: false },
