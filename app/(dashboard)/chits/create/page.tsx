@@ -66,19 +66,30 @@ export default function CreateChitPage() {
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      <Button
-        variant="ghost"
-        onClick={() => router.back()}
-        className="mb-6"
-      >
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Back
-      </Button>
+      <div className="flex items-center justify-between mb-6">
+        <Button
+          variant="ghost"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
+        
+        {/* Fixed Save Button at Top */}
+        <button
+          type="submit"
+          form="chit-form"
+          disabled={loading}
+          className="px-8 py-3 bg-blue-600 text-white text-base font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg"
+        >
+          {loading ? '⏳ Creating...' : '✓ Save Chit Fund'}
+        </button>
+      </div>
 
       <Card className="p-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Create Chit Fund</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form id="chit-form" onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Chit Name *</label>
             <Input
@@ -155,18 +166,23 @@ export default function CreateChitPage() {
             />
           </div>
 
-          <div className="flex gap-4">
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? 'Creating...' : 'Create Chit Fund'}
-            </Button>
-            <Button
+          {/* Bottom Save Button */}
+          <div className="flex gap-4 pt-6 border-t-2 border-gray-200 mt-8 sticky bottom-0 bg-white pb-4">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 px-8 py-4 bg-green-600 text-white text-lg font-bold rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg hover:shadow-xl"
+            >
+              {loading ? '⏳ Creating...' : '✓ Save Chit Fund'}
+            </button>
+            <button
               type="button"
-              variant="outline"
               onClick={() => router.back()}
               disabled={loading}
+              className="px-8 py-4 border-2 border-gray-300 text-gray-700 text-lg font-semibold rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Cancel
-            </Button>
+            </button>
           </div>
         </form>
       </Card>
